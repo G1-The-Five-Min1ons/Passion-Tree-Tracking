@@ -3,8 +3,6 @@ name: Deploy to Vercel
 on:
   push:
     branches: [main, master]
-  pull_request:
-    branches: [main, master]
 
 jobs:
   deploy:
@@ -17,8 +15,8 @@ jobs:
         run: npm i -g vercel@latest
 
       - name: Deploy to Vercel
-        # คำสั่งเดียวจบ: --yes คือข้ามคำถามทั้งหมด, --prod คือขึ้น production
-        run: vercel --token=${{ secrets.VERCEL_TOKEN }} --yes ${{ github.event_name == 'push' && '--prod' || '' }}
+        # ใช้คำสั่งเดียวเพื่อส่งไฟล์ขึ้นไปให้ Vercel Build เอง
+        run: vercel --token=${{ secrets.VERCEL_TOKEN }} --yes --prod
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
