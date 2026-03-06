@@ -7,7 +7,7 @@ import {
   createTask,
   deleteTask,
   generateIssueKey,
-} from "@/lib/excel";
+} from "@/lib/tasksDb";
 
 export const dynamic = "force-dynamic";
 
