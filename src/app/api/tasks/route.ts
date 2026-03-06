@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       sprint: body.sprint || "",
       parentKey: body.parentKey || "",
       parentSummary: body.parentSummary || "",
-    });
+    }, body.insertAfterRow);
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
     console.error("POST /api/tasks error:", error);

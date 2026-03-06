@@ -17,6 +17,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [insertConfig, setInsertConfig] = useState<{ sheet: string; insertAfterRow: number; parentKey?: string } | null>(null);
   const [view, setView] = useState<ViewMode>("table");
   const [filters, setFilters] = useState({
     status: "",
@@ -69,12 +70,14 @@ export default function Home() {
   }, [fetchTasks, fetchEpics]);
 
   const handleCreate = async (data: TaskFormData) => {
+    const payload = insertConfig ? { ...data, insertAfterRow: insertConfig.insertAfterRow } : data;
     await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     setModalOpen(false);
+    setInsertConfig(null);
     fetchTasks();
     fetchEpics();
   };
@@ -170,6 +173,13 @@ export default function Home() {
 
   const openCreate = () => {
     setEditingTask(null);
+    setInsertConfig(null);
+    setModalOpen(true);
+  };
+
+  const handleInsert = (sheet: string, insertAfterRow: number, parentKey?: string) => {
+    setEditingTask(null);
+    setInsertConfig({ sheet, insertAfterRow, parentKey });
     setModalOpen(true);
   };
 
@@ -339,6 +349,7 @@ export default function Home() {
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}
             onFieldChange={handleFieldChange}
+            onInsertTask={handleInsert}
           />
         ) : (
           <Timeline tasks={tasks} onEdit={openEdit} />
@@ -349,6 +360,7 @@ export default function Home() {
       {modalOpen && (
         <TaskModal
           task={editingTask}
+          insertConfig={insertConfig}
           tasks={tasks}
           sheets={sheets}
           activeSheet={activeSheet}
@@ -356,6 +368,7 @@ export default function Home() {
           onClose={() => {
             setModalOpen(false);
             setEditingTask(null);
+            setInsertConfig(null);
           }}
         />
       )}

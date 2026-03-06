@@ -42,6 +42,7 @@ export interface TaskFormData {
   dueDate: string;
   storyPoints: string;
   sheet: string;
+  insertAfterRow?: number;
 }
 
 /** Info about each Epic sheet */

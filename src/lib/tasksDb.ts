@@ -85,17 +85,36 @@ export async function updateTask(
 
 export async function createTask(
     sheetName: string,
-    data: any
+    data: any,
+    insertAfterRow?: number
 ): Promise<Task> {
+    let rowNumToInsert = 1;
+
+    if (insertAfterRow !== undefined) {
+        rowNumToInsert = insertAfterRow + 1;
+        // Shift existing rows down
+        await pool.query(
+            `UPDATE tasks SET row_number = row_number + 1 WHERE sheet = $1 AND row_number >= $2`,
+            [sheetName, rowNumToInsert]
+        );
+    } else {
+        // Find max and append
+        const maxRes = await pool.query(
+            `SELECT COALESCE(MAX(row_number), 0) + 1 AS next_row FROM tasks WHERE sheet = $1`,
+            [sheetName]
+        );
+        rowNumToInsert = maxRes.rows[0].next_row;
+    }
+
     const result = await pool.query(
         `INSERT INTO tasks 
       (issue_key, sheet, summary, issue_type, status, priority, assignee, due_date, story_points, sprint, parent_key, parent_summary, row_number)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, (SELECT COALESCE(MAX(row_number), 1) + 1 FROM tasks WHERE sheet = $2))
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
      RETURNING *`,
         [
             data.issueKey, sheetName, data.summary, data.issueType, data.status,
             data.priority, data.assignee, data.dueDate || null, data.storyPoints,
-            data.sprint, data.parentKey, data.parentSummary
+            data.sprint, data.parentKey, data.parentSummary, rowNumToInsert
         ]
     );
 

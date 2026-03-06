@@ -11,6 +11,7 @@ import {
 
 interface TaskModalProps {
   task: Task | null;
+  insertConfig: { sheet: string; insertAfterRow: number; parentKey?: string } | null;
   tasks: Task[];
   sheets: string[];
   activeSheet: string;
@@ -31,13 +32,14 @@ const PRIORITIES: Priority[] = ["Highest", "High", "Medium", "Low", "Lowest"];
 
 export default function TaskModal({
   task,
+  insertConfig,
   tasks,
   sheets,
   activeSheet,
   onSubmit,
   onClose,
 }: TaskModalProps) {
-  const defaultSheet = task?.sheet || activeSheet || sheets[0] || "";
+  const defaultSheet = task?.sheet || insertConfig?.sheet || activeSheet || sheets[0] || "";
 
   const [form, setForm] = useState<TaskFormData>({
     summary: "",
@@ -51,6 +53,7 @@ export default function TaskModal({
     dueDate: "",
     storyPoints: "",
     sheet: defaultSheet,
+    insertAfterRow: insertConfig?.insertAfterRow,
   });
 
   useEffect(() => {
@@ -68,10 +71,18 @@ export default function TaskModal({
         storyPoints: task.storyPoints,
         sheet: task.sheet,
       });
+    } else if (insertConfig) {
+      setForm((f) => ({ 
+        ...f, 
+        sheet: insertConfig.sheet, 
+        parentKey: insertConfig.parentKey || "",
+        insertAfterRow: insertConfig.insertAfterRow,
+        issueType: insertConfig.parentKey ? "Subtask" : "Task"
+      }));
     } else {
-      setForm((f) => ({ ...f, sheet: activeSheet || sheets[0] || "" }));
+      setForm((f) => ({ ...f, sheet: activeSheet || sheets[0] || "", parentKey: "", insertAfterRow: undefined, issueType: "Task" }));
     }
-  }, [task, activeSheet, sheets]);
+  }, [task, insertConfig, activeSheet, sheets]);
 
   const set = (key: keyof TaskFormData, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));

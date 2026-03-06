@@ -9,6 +9,7 @@ interface TaskTableProps {
   onDelete: (task: Task) => void;
   onStatusChange: (task: Task, status: Status) => void;
   onFieldChange: (task: Task, field: string, value: string) => void;
+  onInsertTask: (sheet: string, insertAfterRow: number, parentKey?: string) => void;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -146,6 +147,7 @@ export default function TaskTable({
   onDelete,
   onStatusChange,
   onFieldChange,
+  onInsertTask,
 }: TaskTableProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -373,6 +375,16 @@ export default function TaskTable({
                   {/* Actions */}
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => onInsertTask(task.sheet, task.rowNumber, task.issueType === 'Epic' ? task.issueKey : task.parentKey)}
+                        className="p-1 rounded hover:bg-[var(--border)] transition-colors text-[var(--text-muted)] hover:text-green-500"
+                        title="Add task below"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      </button>
                       <button
                         onClick={() => onEdit(task)}
                         className="p-1 rounded hover:bg-[var(--border)] transition-colors text-[var(--text-muted)] hover:text-[var(--text)]"
