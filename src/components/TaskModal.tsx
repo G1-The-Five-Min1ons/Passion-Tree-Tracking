@@ -145,17 +145,36 @@ export default function TaskModal({
               <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5 uppercase tracking-wider">
                 Epic / Sheet
               </label>
-              <select
-                value={form.sheet}
-                onChange={(e) => set("sheet", e.target.value)}
-                className="w-full h-9 px-3 text-sm bg-[var(--bg)] border border-[var(--border)] rounded-md text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-              >
-                {sheets.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={sheets.includes(form.sheet) ? form.sheet : "custom"}
+                  onChange={(e) => {
+                    if (e.target.value === "custom") {
+                      set("sheet", "");
+                    } else {
+                      set("sheet", e.target.value);
+                    }
+                  }}
+                  className="w-full h-9 px-3 text-sm bg-[var(--bg)] border border-[var(--border)] rounded-md text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                >
+                  {sheets.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                  <option value="custom">+ New Epic / Sheet...</option>
+                </select>
+                
+                {!sheets.includes(form.sheet) && form.sheet !== activeSheet && (
+                  <input
+                    type="text"
+                    value={form.sheet}
+                    onChange={(e) => set("sheet", e.target.value)}
+                    placeholder="Enter new Epic name..."
+                    className="w-full h-9 px-3 text-sm bg-[var(--bg)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors animate-fade-in"
+                  />
+                )}
+              </div>
             </div>
           )}
 
