@@ -27,7 +27,7 @@ export default function Home() {
 
   // Fetch sheet list once
   useEffect(() => {
-    fetch("/api/tasks?meta=sheets")
+    fetch("/api/tasks?meta=sheets", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => setSheets(data))
       .catch(console.error);
@@ -35,7 +35,7 @@ export default function Home() {
 
   const fetchEpics = useCallback(async () => {
     try {
-      const res = await fetch("/api/tasks?meta=epics");
+      const res = await fetch("/api/tasks?meta=epics", { cache: "no-store" });
       const data = await res.json();
       setEpics(data);
     } catch (err) {
@@ -52,7 +52,7 @@ export default function Home() {
       if (filters.assignee) params.set("assignee", filters.assignee);
       if (filters.search) params.set("search", filters.search);
 
-      const res = await fetch(`/api/tasks?${params.toString()}`);
+      const res = await fetch(`/api/tasks?${params.toString()}`, { cache: "no-store" });
       const data = await res.json();
       setTasks(data);
     } catch (err) {
@@ -106,31 +106,60 @@ export default function Home() {
   };
 
   const handleStatusChange = async (task: Task, status: Status) => {
-    await fetch("/api/tasks", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sheet: task.sheet,
-        rowNumber: task.rowNumber,
-        status,
-      }),
-    });
-    fetchTasks();
+    // Optimistic UI update
+    setTasks((prev) =>
+      prev.map((t) => (t.issueKey === task.issueKey ? { ...t, status } : t))
+    );
+
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sheet: task.sheet,
+          rowNumber: task.rowNumber,
+          status,
+        }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("Server returned " + res.status);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status. If you are on Vercel, you cannot save to the Excel file due to its Read-Only filesystem.");
+      // Revert by re-fetching
+      fetchTasks();
+    }
     fetchEpics();
   };
 
   /** Inline field change (assignee, priority, sprint, storyPoints, etc.) */
   const handleFieldChange = async (task: Task, field: string, value: string) => {
-    await fetch("/api/tasks", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sheet: task.sheet,
-        rowNumber: task.rowNumber,
-        [field]: value,
-      }),
-    });
-    fetchTasks();
+    // Optimistic UI update
+    setTasks((prev) =>
+      prev.map((t) => (t.issueKey === task.issueKey ? { ...t, [field]: value } : t))
+    );
+
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sheet: task.sheet,
+          rowNumber: task.rowNumber,
+          [field]: value,
+        }),
+      });
+      
+      if (!res.ok) {
+        throw new Error("Server returned " + res.status);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update field. If you are on Vercel, you cannot save to the Excel file due to its Read-Only filesystem.");
+      fetchTasks();
+    }
     fetchEpics();
   };
 
